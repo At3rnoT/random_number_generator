@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Random Number Generator</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", Roboto, system-ui, -apple-system, sans-serif;
+        background: linear-gradient(145deg, #e6e6e6, #cfcfcf);
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+      }
+      .shape {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(36px);
+        opacity: 0.35;
+        animation: float 12s infinite ease-in-out;
+      }
+      .shape1 {
+        width: 360px;
+        height: 360px;
+        background: #ffffff;
+        top: -120px;
+        left: -120px;
+      }
+      .shape2 {
+        width: 300px;
+        height: 300px;
+        background: #bdbdbd;
+        bottom: -100px;
+        right: -80px;
+        animation-delay: -6s;
+      }
+      @keyframes float {
+        0% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(30px);
+        }
+        100% {
+          transform: translateY(0);
+        }
+      }
+      .panel {
+        position: relative;
+        z-index: 2;
+        width: 420px;
+        border-radius: 16px;
+        padding: 28px;
+        background: rgba(255, 255, 255, 0.45);
+        backdrop-filter: blur(10px) saturate(120%);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+        transition: width 300ms ease;
+      }
+      .title {
+        margin: 0 0 8px 0;
+        font-size: 1.5rem;
+        color: #222;
+        font-weight: 600;
+        text-align: center;
+      }
+      .subtitle {
+        margin: 0 0 20px 0;
+        font-size: 0.95rem;
+        color: #444;
+        text-align: center;
+      }
+      .box {
+        margin-top: 8px;
+      }
+      label {
+        display: block;
+        text-align: left;
+        font-weight: 600;
+        color: #333;
+        margin-top: 12px;
+      }
+      input[type="number"],
+      input[type="text"] {
+        width: 100%;
+        padding: 10px 12px;
+        margin-top: 8px;
+        border-radius: 10px;
+        border: none;
+        background: rgba(255, 255, 255, 0.85);
+        font-size: 1rem;
+      }
+      .actions {
+        margin-top: 20px;
+        display: flex;
+        gap: 10px;
+      }
+      .btn {
+        flex: 1;
+        padding: 12px;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .btn-primary {
+        background: #3b3b3b;
+        color: white;
+      }
+      .btn-ghost {
+        background: transparent;
+        color: #333;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+      }
+      #result {
+        margin-top: 18px;
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #111;
+        text-align: center;
+        min-height: 40px;
+      }
+      .hidden {
+        display: none;
+      }
+      @media (min-width: 900px) {
+        .panel {
+          width: 480px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="shape shape1"></div>
+    <div class="shape shape2"></div>
+
+    <div class="panel" role="main">
+      <h1 class="title">Random Number Generator</h1>
+
+      <!-- STEP 1 -->
+      <div class="box" id="step1">
+        <p class="subtitle"></p>
+
+        <label for="savedNumbers">Napíš čísla otázok oddelené čiarkou</label>
+        <input id="savedNumbers" type="text" placeholder="napr. 5,12" />
+
+        <div class="actions">
+          <button class="btn btn-primary" onclick="showStep2()">
+            Pokračovať
+          </button>
+          <button class="btn btn-ghost" onclick="clearInputs()">Vymazať</button>
+        </div>
+      </div>
+
+      <!-- STEP 2 -->
+      <div class="box hidden" id="step2" aria-hidden="true">
+        <p class="subtitle"></p>
+
+        <label for="customMin">Minimum</label>
+        <input id="customMin" type="number" />
+
+        <label for="customMax">Maximum</label>
+        <input id="customMax" type="number" />
+
+        <div class="actions">
+          <button class="btn btn-primary" onclick="generateAlternating()">
+            Generate
+          </button>
+        </div>
+
+        <div id="result" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <script>
+      let currentNumbers = [];
+      let nextIndex = 0;
+
+      function showStep2() {
+        const input = document.getElementById("savedNumbers").value;
+        const numbers = input
+          .split(",")
+          .map((n) => parseInt(n.trim(), 10))
+          .filter(Number.isFinite);
+
+        if (numbers.length === 0) {
+          alert("Zlé vstupné čísla.");
+          return;
+        }
+        if (numbers.length < 2) {
+          alert("Potrebuješ aspoň dve čísla.");
+          return;
+        }
+
+        currentNumbers = numbers;
+        nextIndex = 0;
+
+        document.getElementById("step1").classList.add("hidden");
+        const s2 = document.getElementById("step2");
+        s2.classList.remove("hidden");
+        s2.setAttribute("aria-hidden", "false");
+
+        document.getElementById("customMin").value = "";
+        document.getElementById("customMax").value = "";
+        document.getElementById("result").textContent = "";
+      }
+
+      function generateAlternating() {
+        const minRange = parseInt(
+          document.getElementById("customMin").value,
+          10
+        );
+        const maxRange = parseInt(
+          document.getElementById("customMax").value,
+          10
+        );
+
+        if (
+          !Number.isFinite(minRange) ||
+          !Number.isFinite(maxRange) ||
+          minRange > maxRange
+        ) {
+          alert("Zadaj platný rozsah.");
+          return;
+        }
+
+        const filtered = currentNumbers.filter(
+          (n) => n >= minRange && n <= maxRange
+        );
+        if (filtered.length === 0) {
+          alert("V tomto rozsahu sa nenachádza žiadne z tvojich čísiel.");
+          return;
+        }
+
+        const finalNumber = filtered[nextIndex % filtered.length];
+        nextIndex++;
+
+        startShuffleAnimation(minRange, maxRange, finalNumber);
+      }
+
+      function startShuffleAnimation(min, max, finalNumber) {
+        const resultBox = document.getElementById("result");
+        let shuffleCount = 0;
+
+        const interval = setInterval(() => {
+          const randomFake = Math.floor(Math.random() * (max - min + 1)) + min;
+          resultBox.textContent = randomFake;
+          shuffleCount++;
+        }, 58);
+
+        setTimeout(() => {
+          clearInterval(interval);
+          resultBox.textContent = finalNumber;
+        }, 750);
+      }
+
+      function clearInputs() {
+        document.getElementById("savedNumbers").value = "";
+      }
+
+      window.addEventListener("beforeunload", function (e) {
+        const step2Visible = !document
+          .getElementById("step2")
+          .classList.contains("hidden");
+        if (step2Visible) {
+          e.preventDefault();
+          e.returnValue = "";
+        }
+      });
+    </script>
+  </body>
+</html>
